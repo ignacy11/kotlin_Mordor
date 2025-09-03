@@ -1,0 +1,15 @@
+Aplikacja mobilna „Planer wyprawy do Mordoru”
+Twoim zadaniem jest stworzenie aplikacji, która pozwoli zaplanować wyprawę Drużyny Pierścienia do Mordoru.
+Funkcjonalności aplikacji:
+
+- Imię bohatera – użytkownik wpisuje imię wybranego uczestnika wyprawy (np. Frodo, Sam, Aragorn).
+- Rasa bohatera – wybór z listy rozwijanej (hobbit, człowiek, elf, krasnolud, czarodziej). Po wyborze zmienia się ikona bohatera (np. pierścień, miecz, łuk).
+- Data i godzina wyruszenia – użytkownik wybiera termin wyprawy w kalendarzu i ustawia godzinę.
+- Opcje specjalne – można włączyć lub wyłączyć tajne ścieżki elfów (Switch).
+- Wyposażenie – użytkownik zaznacza dodatkowe przedmioty za pomocą pól wyboru (CheckBox): płaszcz elfów, lembasy, pochodnia.
+- Priorytet marszu – wybór za pomocą przycisków (radiobutton): ukryty, zbalansowany, forsowny.
+- Czas trwania marszu – ustawiany suwakiem (SeekBar), a wybrana wartość pokazuje się w tekście obok.
+- Trening kondycyjny – można uruchomić i zatrzymać stoper (Chronometer).
+- Odliczanie do wymarszu – przycisk uruchamia licznik (CountDownTimer), a pasek postępu (ProgressBar) pokazuje upływ czasu.
+- Ocena morale Drużyny – użytkownik ocenia nastrój zespołu za pomocą gwiazdek (RatingBar).
+- Podsumowanie – na dole ekranu pojawia się skrótowy opis planu: bohater, rasa, priorytet marszu, wyposażenie, czas i morale.
