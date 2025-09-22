@@ -2,10 +2,13 @@ package com.example.kotlin_mordor
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
+import android.content.Context
+import android.content.Intent
+import android.graphics.Color
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.SystemClock.elapsedRealtime
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -44,9 +47,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var stopwatchButton: Button
     private lateinit var chronometer: Chronometer
     private lateinit var timerButton: Button
-    private lateinit var ratingBarSelection: RatingBar
+    private lateinit var timerTextView: TextView
+    private lateinit var ratingBar: RatingBar
     private lateinit var submitButton: Button
 
+    @SuppressLint("UseKtx")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -77,7 +82,8 @@ class MainActivity : AppCompatActivity() {
         stopwatchButton = findViewById(R.id.stopwatchButton)
         chronometer = findViewById(R.id.chronometer)
         timerButton = findViewById(R.id.timerButton)
-        ratingBarSelection = findViewById(R.id.ratingBarSelection)
+        timerTextView = findViewById(R.id.timerTextView)
+        ratingBar = findViewById(R.id.ratingBarSelection)
         submitButton = findViewById(R.id.submitButton)
 
         val username = nameEditText.text.toString()
@@ -128,30 +134,93 @@ class MainActivity : AppCompatActivity() {
             torchEquipmentCheckBoxIsChecked = torchEquipmentCheckbox.isChecked
         }
 
-        marchSpeedRadioGroup.setOnCheckedChangeListener { _, _ ->
-            getSelectedRadioButton()
+        stopwatchButton.setOnClickListener {
+            startChronometer()
         }
 
-        var marchDuration: Int
+        timerButton.setOnClickListener {
+            val countDownTimer = object : CountDownTimer(30000, 1000) {
+                 @SuppressLint("SetTextI18n")
+                override fun onTick(millisUntilFinished: Long) {
+                    val secondsLeft = millisUntilFinished / 1000
+                    timerTextView.text = "00:$secondsLeft"
+                }
+
+                @SuppressLint("SetTextI18n")
+                override fun onFinish() {
+                    timerTextView.text = "Czas upłynął"
+                    timerTextView.setTextColor(Color.RED)
+                }
+            }
+            countDownTimer.start()
+        }
+
         marchDurationSeekBar.setOnSeekBarChangeListener( object : SeekBar.OnSeekBarChangeListener {
             @SuppressLint("SetTextI18n")
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 //Ta metoda wywoływana jest za każdym razem, gdy zmienia się wartość postępu
                 //fromUser informacja czy zmiana wywołana przez użytkownika, czy programistycznie
                 seekBarValue.text = "$progress"
-                marchDuration = progress
             }
 
             override fun onStartTrackingTouch(p0: SeekBar?) {
-                TODO()
+                Toast.makeText(this@MainActivity, "start", Toast.LENGTH_SHORT).show()
             }
 
             override fun onStopTrackingTouch(p0: SeekBar?) {
-                TODO()
+                Toast.makeText(this@MainActivity, "stop", Toast.LENGTH_SHORT).show()
             }
         })
 
-        startChronometer()
+        val sharedPreferences = getSharedPreferences("RatingPrefs", Context.MODE_PRIVATE)
+        val savedRating = sharedPreferences.getFloat("rating", 2.5f)
+        ratingBar.setOnRatingBarChangeListener { _, rating, _ ->
+
+            val editor = sharedPreferences.edit()
+            editor.putFloat("rating", rating)
+            editor.apply()
+
+            val ratingBarValue = ratingBar.rating
+            Toast.makeText(this@MainActivity, "$ratingBarValue", Toast.LENGTH_SHORT).show()
+        }
+
+        val selectedCheckboxes = mutableListOf<String>()
+        fun getSelectedCheckboxes(): MutableList<String> {
+            if(coatEquipmentCheckBox.isChecked) {
+                selectedCheckboxes.add("płaszcz")
+            }
+            if(breadEquipmentCheckbox.isChecked) {
+                selectedCheckboxes.add("lambasy")
+            }
+            if(torchEquipmentCheckbox.isChecked) {
+                selectedCheckboxes.add("pochodnia")
+            }
+            return selectedCheckboxes
+        }
+
+        val selectedID = marchSpeedRadioGroup.checkedRadioButtonId
+        val selectedRadioButton = findViewById<RadioButton>(selectedID)
+
+        val characterName = nameEditText.text.toString()
+        var elfPathsValue = "nie"
+        if(elfPaths) {
+            elfPathsValue = "tak"
+        }
+        getSelectedCheckboxes()
+        submitButton.setOnClickListener {
+            val intent = Intent(this, DataSummaryActivity::class.java)
+
+            intent.putExtra("name", characterName)
+            intent.putExtra("race",selectedRace)
+            intent.putExtra("date", dateResultTextView.text.toString())
+            intent.putExtra("elfPaths", elfPathsValue)
+            intent.putExtra("equipment", selectedCheckboxes.toString())
+            intent.putExtra("marchSpeed", selectedRadioButton.toString())
+            intent.putExtra("marchDuration", seekBarValue.text.toString())
+            intent.putExtra("rating", savedRating)
+
+            startActivity(intent)
+        }
     }
     @SuppressLint("SetTextI18n")
     private fun showDatePicker() {
@@ -161,7 +230,7 @@ class MainActivity : AppCompatActivity() {
         val day = calendar.get(Calendar.DAY_OF_MONTH)
 
         val createdDatePickerDialog = DatePickerDialog(this,{_, selectedDay, selectedMonth, selectedYear ->
-            dateResultTextView.text = "$selectedDay/$selectedMonth+1/$selectedYear"
+            dateResultTextView.text = "$selectedDay/${selectedMonth+1}/$selectedYear"
             val selectedDate = "$selectedDay/${selectedMonth+1}/$selectedYear"
             // użyć później z dateResultTextView.text.toString()
         }, year, month, day)
@@ -174,28 +243,6 @@ class MainActivity : AppCompatActivity() {
         if(elfSwitch.isChecked) elfPaths = true
         return elfPaths
     }
-
-    private fun getSelectedCheckboxes(): MutableList<String> {
-        val selectedCheckboxes = mutableListOf<String>()
-        if(coatEquipmentCheckBox.isChecked) {
-            selectedCheckboxes.add("płaszcz")
-        }
-        if(breadEquipmentCheckbox.isChecked) {
-            selectedCheckboxes.add("lambasy")
-        }
-        if(torchEquipmentCheckbox.isChecked) {
-            selectedCheckboxes.add("pochodnia")
-        }
-        return selectedCheckboxes
-    }
-
-    private fun getSelectedRadioButton(): String {
-        val selectedID = marchSpeedRadioGroup.checkedRadioButtonId
-        val selectedRadioButton = findViewById<RadioButton>(selectedID)
-        return selectedRadioButton.text.toString()
-    }
-
-
 
     private var chronometerIsRunning: Boolean = false
     private fun startChronometer() {
